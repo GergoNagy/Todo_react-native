@@ -9,8 +9,24 @@ import {
     TouchableOpacity
 } from 'react-native';
 
+import Note from './note'
+
 export default class App extends Component {
+    constructor(props){
+        super(props)
+
+        this.state = {
+            noteArray: [],
+            noteText: ''
+        }
+    }
+
     render() {
+        let notes = this.state.noteArray.map((val, key) => {
+            return <Note key={key} keyval={key} val={val} 
+            deleteMethod={ ()=> this.deleteNote(key)}/>
+        })
+
         return (
             <View style={styles.container} >
 
@@ -19,25 +35,51 @@ export default class App extends Component {
                 </View>
 
                 <ScrollView style={styles.scrollContainer}>
-
+                    {notes}
                 </ScrollView>
 
                 <View style={styles.footer}>
                     <TextInput
                         style={styles.textInput}
+                        onChangeText={(noteText) => this.setState({noteText})}
+                        value={this.state.noteText}
                         placeholder = 'note'
                         placeholderTextColor='white'
                         underlineColorAndroid='transparent'>
                     </TextInput>
                 </View>
 
-                <TouchableOpacity style={styles.addButton}>
+                <TouchableOpacity 
+                    style={styles.addButton}
+                    onPress={this.addNote.bind(this)}
+                    >
                     <Text style={styles.addButtonText}>+</Text>
                 </TouchableOpacity>
             </View>
         );
     }
+
+    addNote() {
+        if (this.state.noteText) {
+            var d = new Date()
+            this.state.noteArray.push({
+                'date': d.getFullYear() +
+                "/" + (d.getMonth() + 1) +
+                "/" + d.getDate(),
+                'note': this.state.noteText
+            })
+            this.setState({noteArray: this.state.noteArray})
+            this.setState({noteText: ''})
+        }
+    }
+
+    deleteNote(key) {
+        this.state.noteArray.splice(key, 1)
+        this.setState({noteArray: this.state.noteArray})
+    }
+
 }
+
 
 const styles = StyleSheet.create({
     container: {
