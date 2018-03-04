@@ -10,21 +10,45 @@ import {
 } from 'react-native';
 
 import Note from './note'
+import * as firebase from 'firebase'
 
 export default class App extends Component {
     constructor(props){
         super(props)
-
+        this.notesRef = firebase.database().ref('shoppingList/')
         this.state = {
             noteArray: [],
             noteText: ''
         }
     }
 
+    componentDidMount() {
+        this.listenForTasks(this.notesRef);
+    }
+
+    listenForTasks(notesRef) {
+        notesRef.on('value', (dataSnapshot) => {
+            var notes = [];
+            dataSnapshot.forEach((child) => {
+                notes.push({
+                    note: child.val().date,
+                    date: child.val().note,
+                    _key: child.key
+                })
+                console.log('child', child)
+            })
+            this.setState({
+                noteArray: notes
+            })
+        });
+    }
+
     render() {
+        console.log('notarray ', this.state.noteArray)
         let notes = this.state.noteArray.map((val, key) => {
+            console.log('val', val)
             return <Note key={key} keyval={key} val={val} 
-            deleteMethod={ ()=> this.deleteNote(key)}/>
+            deleteMethod={ ()=> this.deleteNote(val, key)}/>
         })
 
         return (
@@ -62,18 +86,18 @@ export default class App extends Component {
     addNote() {
         if (this.state.noteText) {
             var d = new Date()
-            this.state.noteArray.push({
+            this.notesRef.push({
                 'date': d.getFullYear() +
                 "/" + (d.getMonth() + 1) +
                 "/" + d.getDate(),
                 'note': this.state.noteText
             })
-            this.setState({noteArray: this.state.noteArray})
             this.setState({noteText: ''})
         }
     }
 
-    deleteNote(key) {
+    deleteNote(val, key) {
+        this.notesRef.child(val._key).remove()
         this.state.noteArray.splice(key, 1)
         this.setState({noteArray: this.state.noteArray})
     }
